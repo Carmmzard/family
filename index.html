@@ -25,7 +25,6 @@
             const [showBulkAdd, setShowBulkAdd] = React.useState(false);
             const [newFamily, setNewFamily] = React.useState({
                 name: '',
-                color: ''
             });
             const [bulkNames, setBulkNames] = React.useState('');
             const [bulkColors, setBulkColors] = React.useState('');
@@ -33,46 +32,67 @@
             const colorMap = {
                 'Белый': '#FFFFFF',
                 'Черный': '#000000',
-                'Коричневый': '#8B4513',
-                'Серый': '#808080',
-                'Зеленый': '#008000',
-                'Оранжевый': '#FFA500',
-                'Фиолетовый': '#800080',
-                'Красный': '#FF0000',
-                'Желтый': '#FFFF00',
-                'Розовый': '#FFC0CB',
-                'Синий': '#0000FF',
-                'Голубой': '#00FFFF',
-                'Бежевый': '#F5F5DC'
+                'Коричневый': '#B24200',
+                'Серый': '#6D6B70',
+                'Зеленый': '#00E500',
+                'Оранжевый': '#FF7000',
+                'Фиолетовый': '#B102FF',
+                'Красный': '#FF0202',
+                'Желтый': '#FFE400',
+                'Розовый': '#FE028B',
+                'Синий': '#0202FF',
+                'Голубой': '#00E3FE',
+                'Бежевый': '#E7D5BD'
             };
 
             const addFamily = (e) => {
                 e.preventDefault();
-                if (newFamily.name && newFamily.color) {
+                if (newFamily.name) {
+                    // Получаем список уже использованных цветов
+                    const usedColors = families.map(f => f.color);
+                    // Получаем список доступных цветов
+                    const availableColors = Object.keys(colorMap).filter(color => !usedColors.includes(color));
+                    
+                    if (availableColors.length === 0) {
+                        alert('Все цвета уже использованы!');
+                        return;
+                    }
+
+                    // Выбираем случайный цвет из доступных
+                    const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+
                     setFamilies([...families, {
-                        ...newFamily,
+                        name: newFamily.name,
+                        color: randomColor,
                         id: Date.now()
                     }]);
                     setNewFamily({
-                        name: '',
-                        color: ''
+                        name: ''
                     });
                 }
             };
 
             const handleBulkAdd = () => {
                 const names = bulkNames.split('\n').filter(n => n.trim());
-                const colors = bulkColors.split('\n').filter(c => c.trim());
+                const usedColors = families.map(f => f.color);
+                const availableColors = Object.keys(colorMap).filter(color => !usedColors.includes(color));
+
+                if (names.length > availableColors.length) {
+                    alert(`Недостаточно доступных цветов! Доступно: ${availableColors.length}, нужно: ${names.length}`);
+                    return;
+                }
+
+                // Перемешиваем доступные цвета
+                const shuffledColors = [...availableColors].sort(() => Math.random() - 0.5);
 
                 const newFamilies = names.map((name, index) => ({
                     id: Date.now() + index,
                     name: name.trim(),
-                    color: colors[index] || ''
+                    color: shuffledColors[index]
                 }));
 
                 setFamilies([...families, ...newFamilies]);
                 setBulkNames('');
-                setBulkColors('');
                 setShowBulkAdd(false);
             };
 
@@ -161,15 +181,6 @@
                                 onChange={e => setNewFamily({
                                     ...newFamily,
                                     name: e.target.value
-                                })} 
-                            />
-                            <input 
-                                type="text"
-                                placeholder="Цвет (например: Коричневый)" 
-                                value={newFamily.color} 
-                                onChange={e => setNewFamily({
-                                    ...newFamily,
-                                    color: e.target.value
                                 })} 
                             />
                             <button type="submit">Добавить</button>
